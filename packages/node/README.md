@@ -1,19 +1,19 @@
-# @zerodev/kora
+# @zerodev-ca/kora
 
 Official Node.js and TypeScript SDK for Kora licensing.
 
 ## Installation
 
 ```bash
-npm install @zerodev/kora
+npm install @zerodev-ca/kora
 # or
-bun add @zerodev/kora
+bun add @zerodev-ca/kora
 ```
 
 ## Usage
 
 ```typescript
-import { KoraClient } from "@zerodev/kora";
+import { KoraClient } from "@zerodev-ca/kora";
 
 const client = new KoraClient({
     serverUrl: "https://api.yourdomain.com",

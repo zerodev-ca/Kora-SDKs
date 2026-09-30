@@ -6,9 +6,9 @@ Official client SDKs for integrating Kora license validation and session managem
 
 | Package | Language / Platform | Directory |
 |---|---|---|
-| `@zerodev/kora` | Node.js / TypeScript | `packages/node` |
+| `@zerodev-ca/kora` | Node.js / TypeScript | `packages/node` |
 | `ca.zerodev:kora-java` | Java 17+ (Paper, Spigot, Velocity, Folia) | `packages/java` |
-| `kora-sdk` | Python 3.8+ | `packages/python` |
+| `zerodev-kora` | Python 3.8+ | `packages/python` |
 | `kora-fivem` | FiveM / RedM (Lua & JS) | `packages/fivem` |
 
 ## Features

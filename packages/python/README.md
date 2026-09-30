@@ -1,11 +1,11 @@
-# kora-sdk
+# zerodev-kora
 
 Official Python SDK for Kora licensing.
 
 ## Installation
 
 ```bash
-pip install kora-sdk
+pip install zerodev-kora
 ```
 
 ## Usage
