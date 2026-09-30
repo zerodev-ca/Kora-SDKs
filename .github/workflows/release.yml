@@ -25,7 +25,13 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: npm install -g npm@latest
       - run: cd packages/node && npm install && npm run build
-      - run: cd packages/node && npm publish --provenance --access public
+      - working-directory: packages/node
+        run: |
+          if npm view "$(node -p 'require("./package.json").name')@$(node -p 'require("./package.json").version')" version > /dev/null 2>&1; then
+            echo "Version already published, skipping."
+            exit 0
+          fi
+          npm publish --provenance --access public
 
   release-python:
     if: inputs.target == 'all' || inputs.target == 'python' || github.event_name == 'release'
@@ -44,6 +50,7 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: packages/python/dist/
+          skip-existing: true
 
   release-java:
     if: inputs.target == 'all' || inputs.target == 'java' || github.event_name == 'release'
