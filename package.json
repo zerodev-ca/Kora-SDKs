@@ -1,0 +1,13 @@
+{
+    "name": "kora-sdks",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "packages/node",
+        "packages/fivem"
+    ],
+    "scripts": {
+        "build": "bun --filter './packages/*' run build",
+        "typecheck": "bun --filter './packages/*' run typecheck"
+    }
+}

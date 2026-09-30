@@ -1,0 +1,10 @@
+fx_version 'cerulean'
+game 'gta5'
+
+author 'Zero Development'
+description 'Official FiveM SDK for Kora licensing'
+version '1.0.0'
+
+server_scripts {
+    'server/server.lua'
+}
