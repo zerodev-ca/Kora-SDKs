@@ -1,0 +1,71 @@
+name: Release SDKs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Package to release (all, node, python, java, fivem)"
+        required: true
+        default: "all"
+
+jobs:
+  release-node:
+    if: inputs.target == 'all' || inputs.target == 'node' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+      - run: cd packages/node && npm install && npm run build
+      - run: cd packages/node && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  release-python:
+    if: inputs.target == 'all' || inputs.target == 'python' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --upgrade build twine
+      - run: cd packages/python && python -m build
+      - run: cd packages/python && twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+  release-java:
+    if: inputs.target == 'all' || inputs.target == 'java' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+      - run: cd packages/java && mvn clean package
+      - name: Upload Java JAR to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packages/java/target/*.jar
+
+  release-fivem:
+    if: inputs.target == 'all' || inputs.target == 'fivem' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          cd packages
+          zip -r kora-fivem.zip fivem
+      - name: Upload FiveM ZIP to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packages/kora-fivem.zip
