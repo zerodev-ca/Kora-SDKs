@@ -11,7 +11,6 @@ class ValidationResponse:
     status: Optional[str] = None
     expires_at: Optional[str] = None
     addons: Optional[List[str]] = None
-    features: Optional[List[str]] = None
     nonce: Optional[str] = None
     timestamp: Optional[int] = None
     variables: Optional[Dict[str, Any]] = None

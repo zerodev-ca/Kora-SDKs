@@ -96,7 +96,6 @@ class Client:
             status=data.get("status"),
             expires_at=data.get("expires_at"),
             addons=data.get("addons"),
-            features=data.get("features"),
             nonce=data.get("nonce"),
             timestamp=data.get("timestamp"),
             variables=data.get("variables"),

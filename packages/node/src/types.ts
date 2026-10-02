@@ -35,7 +35,6 @@ export interface ValidationResponse {
     status?: LicenseStatus | null;
     expires_at?: string | null;
     addons?: string[];
-    features?: string[];
     nonce?: string | null;
     timestamp?: number;
     valid_until?: number | null;
@@ -74,7 +73,6 @@ export interface OfflineLicense {
     issued_at: number;
     expires_at: number;
     grace_period_ms: number;
-    features: string[];
     hwid?: string;
     signature: string;
 }

@@ -12,7 +12,6 @@ public class KoraResponse {
     private String status;
     private String expires_at;
     private List<String> addons;
-    private List<String> features;
     private String nonce;
     private Long timestamp;
     private Map<String, Object> variables;
@@ -35,12 +34,8 @@ public class KoraResponse {
         return this.code;
     }
 
-    public List<String> getFeatures() {
-        return this.features;
-    }
-
-    public boolean hasFeature(String name) {
-        return this.features != null && this.features.contains(name);
+    public boolean hasAddon(String name) {
+        return this.addons != null && this.addons.contains(name);
     }
 
     public String getMessage() {

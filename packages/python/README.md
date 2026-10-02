@@ -24,7 +24,7 @@ client = Client(
 
 result = client.validate()
 if result.valid:
-    print(f"Licensed to {result.user} with {result.features}")
+    print(f"Licensed to {result.user} with {result.addons}")
 else:
     print(f"{result.code}: {result.message}")
 ```

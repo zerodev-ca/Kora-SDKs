@@ -25,7 +25,7 @@ const client = new Client({
 
 const result = await client.validate();
 if (result.valid) {
-    console.log("Licensed to", result.user, "with", result.features);
+    console.log("Licensed to", result.user, "with", result.addons);
 } else {
     console.error(`${result.code}: ${result.message}`);
 }
