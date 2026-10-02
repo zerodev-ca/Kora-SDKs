@@ -5,12 +5,14 @@ import java.util.Map;
 
 public class KoraResponse {
     private boolean valid;
+    private String code;
     private String message;
     private String product;
     private String user;
     private String status;
     private String expires_at;
     private List<String> addons;
+    private List<String> features;
     private String nonce;
     private Long timestamp;
     private Map<String, Object> variables;
@@ -27,6 +29,18 @@ public class KoraResponse {
 
     public boolean isValid() {
         return this.valid;
+    }
+
+    public String getCode() {
+        return this.code;
+    }
+
+    public List<String> getFeatures() {
+        return this.features;
+    }
+
+    public boolean hasFeature(String name) {
+        return this.features != null && this.features.contains(name);
     }
 
     public String getMessage() {

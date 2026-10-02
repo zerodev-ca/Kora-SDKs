@@ -8,6 +8,7 @@ export interface ClientOptions {
     signatureHeader?: string;
     heartbeatIntervalMs?: number;
     machineId?: string;
+    maxSkewMs?: number;
 }
 
 export interface ValidationRequest {
@@ -22,21 +23,40 @@ export interface ValidationRequest {
 
 export interface SessionData {
     token: string;
+    timeout?: number;
 }
 
 export interface ValidationResponse {
     valid: boolean;
+    code?: string;
     message: string;
-    product?: string;
+    product?: string | null;
     user?: string | null;
-    status?: LicenseStatus;
+    status?: LicenseStatus | null;
     expires_at?: string | null;
     addons?: string[];
-    nonce?: string;
+    features?: string[];
+    nonce?: string | null;
     timestamp?: number;
+    valid_until?: number | null;
     variables?: Record<string, unknown>;
     user_variables?: Record<string, unknown>;
     session?: SessionData | null;
+    device?: { id: number; hwid: string; name: string } | null;
+    license?: Record<string, unknown> | null;
+    offline?: OfflineLicense;
+}
+
+export interface UpdateResponse {
+    success: boolean;
+    code?: string;
+    message: string;
+    update_available?: boolean;
+    current?: string | null;
+    latest?: { version: string; channel: string; notes: string; required: boolean; size: number; sha256: string | null; published_at: string } | null;
+    download_url?: string | null;
+    nonce?: string | null;
+    timestamp?: number;
 }
 
 export interface MachineInfo {
@@ -55,5 +75,6 @@ export interface OfflineLicense {
     expires_at: number;
     grace_period_ms: number;
     features: string[];
+    hwid?: string;
     signature: string;
 }

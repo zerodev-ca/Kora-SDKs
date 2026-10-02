@@ -13,27 +13,52 @@ bun add @zerodev-ca/kora
 ## Usage
 
 ```typescript
-import { KoraClient } from "@zerodev-ca/kora";
+import { Client } from "@zerodev-ca/kora";
 
-const client = new KoraClient({
-    serverUrl: "https://api.yourdomain.com",
+const client = new Client({
+    url: "https://api.yourdomain.com/api/v1",
     product: "MySoftware",
-    publicKey: "-----BEGIN PUBLIC KEY-----\n..."
+    key: process.env.LICENSE_KEY,
+    publicKey: "-----BEGIN PUBLIC KEY-----\n...",
+    heartbeatIntervalMs: 300000
 });
 
-const result = await client.validate("XXXXX-XXXXX-XXXXX-XXXXX");
+const result = await client.validate();
 if (result.valid) {
-    console.log("License is valid for:", result.user);
+    console.log("Licensed to", result.user, "with", result.features);
 } else {
-    console.error("Validation failed:", result.message);
+    console.error(`${result.code}: ${result.message}`);
 }
 ```
 
-## Offline Verification
+`url` is your Kora API address followed by `/api/v1`. The public key is shown under **Settings** in the Kora dashboard and at `GET /api/v1/public-key`. With a public key set, every answer is checked for a valid `x-kora-signature`, the nonce the client sent, and a timestamp within `maxSkewMs` (five minutes by default).
+
+`heartbeatIntervalMs` re-validates in the background with the session token, which keeps a concurrent session slot alive.
+
+## Releasing the device
 
 ```typescript
-const offline = client.verifyOffline(signedOfflineToken);
-if (offline.valid) {
-    console.log("Offline license valid until:", new Date(offline.payload.expires_at));
+await client.deactivate();
+```
+
+## Offline licenses
+
+```typescript
+import { writeFileSync, readFileSync } from "fs";
+
+writeFileSync("license.json", JSON.stringify(await client.requestOffline()));
+
+const offline = client.verifyOffline(readFileSync("license.json", "utf8"));
+if (offline !== null) {
+    console.log("Offline license valid until", new Date(offline.expires_at + offline.grace_period_ms));
+}
+```
+
+## Updates
+
+```typescript
+const update = await client.checkUpdate("1.4.2");
+if (update.update_available && update.latest && update.download_url) {
+    console.log(`Version ${update.latest.version} is available at ${update.download_url}`);
 }
 ```

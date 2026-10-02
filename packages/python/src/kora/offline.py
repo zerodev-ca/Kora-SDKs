@@ -7,7 +7,7 @@ class Offline:
     def __init__(self):
         self.signature = Signature()
 
-    def verify(self, content: str, public_key_pem: str) -> Optional[Dict[str, Any]]:
+    def verify(self, content: str, public_key_pem: str, hwid: Optional[str] = None) -> Optional[Dict[str, Any]]:
         try:
             data = json.loads(content)
             if "signature" not in data or "expires_at" not in data:
@@ -15,8 +15,10 @@ class Offline:
             sig = data["signature"]
             copy_data = dict(data)
             del copy_data["signature"]
-            serialized = json.dumps(copy_data, separators=(",", ":"), sort_keys=True)
+            serialized = json.dumps(copy_data, separators=(",", ":"), sort_keys=True, ensure_ascii=False)
             if not self.signature.verify(serialized, sig, public_key_pem):
+                return None
+            if hwid is not None and "hwid" in data and data["hwid"] != hwid:
                 return None
             now_ms = int(time.time() * 1000)
             allowed_until = data["expires_at"] + data.get("grace_period_ms", 0)

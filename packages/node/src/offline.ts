@@ -8,21 +8,26 @@ export class Offline {
         this.signature = new Signature();
     }
 
-    verify(fileContent: string, publicKeyPem: string): OfflineLicense | null {
+    canonical(value: Record<string, unknown>): string {
+        return JSON.stringify(Object.fromEntries(Object.keys(value).sort().map(key => [key, value[key]])));
+    }
+
+    verify(fileContent: string, publicKeyPem: string, hwid?: string): OfflineLicense | null {
         try {
             const parsed = JSON.parse(fileContent) as OfflineLicense;
             if (parsed.key === undefined || parsed.signature === undefined || parsed.product === undefined) {
                 return null;
             }
-            const copy = { ...parsed };
-            delete (copy as { signature?: string }).signature;
-            const serialized = JSON.stringify(copy);
-            if (!this.signature.verify(serialized, parsed.signature, publicKeyPem)) {
+            const copy: Record<string, unknown> = { ...parsed };
+            delete copy.signature;
+            if (!this.signature.verify(this.canonical(copy), parsed.signature, publicKeyPem)) {
                 return null;
             }
-            const now = Date.now();
+            if (hwid !== undefined && parsed.hwid !== undefined && parsed.hwid !== hwid) {
+                return null;
+            }
             const allowedUntil = parsed.expires_at + (parsed.grace_period_ms !== undefined ? parsed.grace_period_ms : 0);
-            if (now > allowedUntil) {
+            if (Date.now() > allowedUntil) {
                 return null;
             }
             return parsed;
