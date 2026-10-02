@@ -38,8 +38,6 @@ export interface ValidationResponse {
     nonce?: string | null;
     timestamp?: number;
     valid_until?: number | null;
-    variables?: Record<string, unknown>;
-    user_variables?: Record<string, unknown>;
     session?: SessionData | null;
     device?: { id: number; hwid: string; name: string } | null;
     license?: Record<string, unknown> | null;

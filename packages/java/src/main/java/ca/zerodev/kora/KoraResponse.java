@@ -1,7 +1,6 @@
 package ca.zerodev.kora;
 
 import java.util.List;
-import java.util.Map;
 
 public class KoraResponse {
     private boolean valid;
@@ -14,8 +13,6 @@ public class KoraResponse {
     private List<String> addons;
     private String nonce;
     private Long timestamp;
-    private Map<String, Object> variables;
-    private Map<String, Object> user_variables;
     private SessionData session;
 
     public static class SessionData {
@@ -68,14 +65,6 @@ public class KoraResponse {
 
     public Long getTimestamp() {
         return this.timestamp;
-    }
-
-    public Map<String, Object> getVariables() {
-        return this.variables;
-    }
-
-    public Map<String, Object> getUserVariables() {
-        return this.user_variables;
     }
 
     public String getSessionToken() {

@@ -98,8 +98,6 @@ class Client:
             addons=data.get("addons"),
             nonce=data.get("nonce"),
             timestamp=data.get("timestamp"),
-            variables=data.get("variables"),
-            user_variables=data.get("user_variables"),
             session_token=session_info.get("token") if isinstance(session_info, dict) else None,
             raw=data
         )

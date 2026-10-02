@@ -13,7 +13,5 @@ class ValidationResponse:
     addons: Optional[List[str]] = None
     nonce: Optional[str] = None
     timestamp: Optional[int] = None
-    variables: Optional[Dict[str, Any]] = None
-    user_variables: Optional[Dict[str, Any]] = None
     session_token: Optional[str] = None
     raw: Dict[str, Any] = field(default_factory=dict)
