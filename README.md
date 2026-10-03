@@ -13,10 +13,14 @@ Official client SDKs for checking Kora licenses from applications, plugins and g
 
 ## Features
 
-- License validation against a product, with the license, product and customer in the answer.
-- Optional API key, for when **Require API Key** is on in the Kora dashboard.
+- License validation, with the license, product, customer and custom data in the answer.
+- A hardware ID sent with every check, so Kora can enforce device limits.
+- Ed25519 signature checks with nonce and timestamp, so a fake or replayed answer is rejected.
+- Signed offline license files with a grace period (Node, Python, Java).
+- Update checks with signed download links.
+- Optional API key, for when **Require API Key** is on.
 - Optional re-check on an interval that reports when a license stops being valid.
 
 ## Server
 
-Set `url` to your Kora API address. Every SDK posts `license_key` and `product_name` to `/api/v1/licenses/validate` and sends `Authorization: Bearer <api key>` when an API key is set. The **Integration** page in the Kora dashboard shows the address and ready-to-copy examples.
+Set `url` to your Kora API address. The SDKs call `/api/v1/licenses/validate`, `/api/v1/licenses/offline` and `/api/v1/updates/check`. Copy the public key from the **Integration** page in the Kora dashboard, or from `GET /api/v1/public-key`.
