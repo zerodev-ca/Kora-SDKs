@@ -11,50 +11,31 @@ pip install zerodev-kora
 ## Usage
 
 ```python
-import os
+import os, sys
 from kora import Client
 
 client = Client(
-    url="https://api.yourdomain.com/api/v1",
+    url="https://api.yourdomain.com",
     product="MySoftware",
-    key=os.environ["LICENSE_KEY"],
-    public_key="-----BEGIN PUBLIC KEY-----\n...",
-    heartbeat_interval_sec=300
+    key=os.environ["LICENSE_KEY"]
 )
 
 result = client.validate()
-if result.valid:
-    print(f"Licensed to {result.user} with {result.addons}")
-else:
-    print(f"{result.code}: {result.message}")
+if not result.valid:
+    sys.exit(result.message)
+
+print("Licensed to", result.license["customer"]["name"])
 ```
 
-`url` is your Kora API address followed by `/api/v1`. With `public_key` set, every answer is checked for a valid `x-kora-signature`, the nonce the client sent, and a timestamp within `max_skew_sec` (five minutes by default).
+`url` is your Kora API address. `result` holds `valid`, `message`, `code` (the HTTP status), `license` and the full answer in `raw`.
 
-## Releasing the device
+## Options
 
-```python
-client.deactivate()
-```
+| Option | Description |
+|---|---|
+| `api_key` | Sent as `Authorization: Bearer`. Needed when Require API Key is on. |
+| `interval_sec` | Re-check the license on this interval after a valid result. |
+| `on_invalid` | Called with the result when a re-check fails. |
+| `timeout_sec` | Request timeout, 15 seconds by default. |
 
-## Offline licenses
-
-```python
-import json
-
-with open("license.json", "w") as file:
-    json.dump(client.request_offline(), file)
-
-with open("license.json") as file:
-    offline = client.verify_offline(file.read())
-if offline is not None:
-    print("Offline license valid until", offline["expires_at"] + offline["grace_period_ms"])
-```
-
-## Updates
-
-```python
-update = client.check_update("1.4.2")
-if update.get("update_available"):
-    print(update["latest"]["version"], update["download_url"])
-```
+Call `client.stop()` to stop re-checking.

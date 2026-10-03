@@ -1,17 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 @dataclass
 class ValidationResponse:
     valid: bool
     message: str
-    code: Optional[str] = None
-    product: Optional[str] = None
-    user: Optional[str] = None
-    status: Optional[str] = None
-    expires_at: Optional[str] = None
-    addons: Optional[List[str]] = None
-    nonce: Optional[str] = None
-    timestamp: Optional[int] = None
-    session_token: Optional[str] = None
+    code: int
+    license: Optional[Dict[str, Any]] = None
     raw: Dict[str, Any] = field(default_factory=dict)
