@@ -31,7 +31,7 @@ jobs:
             echo "Version already published, skipping."
             exit 0
           fi
-          npm publish --provenance --access public
+          npm stage publish --provenance --access public
 
   release-python:
     if: inputs.target == 'all' || inputs.target == 'python' || github.event_name == 'release'
