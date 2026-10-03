@@ -8,7 +8,7 @@ Official Java SDK for Kora licensing. Java 17+, works on Paper, Spigot, Folia, V
 <dependency>
     <groupId>ca.zerodev</groupId>
     <artifactId>kora-java</artifactId>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -16,28 +16,26 @@ Official Java SDK for Kora licensing. Java 17+, works on Paper, Spigot, Folia, V
 
 ```java
 KoraClient kora = new KoraClient.Builder()
-    .url("https://api.yourdomain.com/api/v1")
+    .url("https://api.yourdomain.com")
     .product("MyPlugin")
     .key(getConfig().getString("license-key"))
-    .publicKey(PUBLIC_KEY)
-    .heartbeatIntervalMs(300000)
     .build();
 
 KoraResponse result = kora.validate();
 if (!result.isValid()) {
-    getLogger().severe(result.getCode() + ": " + result.getMessage());
+    getLogger().severe(result.getMessage());
+    getServer().getPluginManager().disablePlugin(this);
 }
 ```
 
-Run `validate()` off the main thread. With a public key set, every answer must carry a valid `x-kora-signature`, the nonce the client sent, and a timestamp within `maxSkewMs` (five minutes by default).
+Run `validate()` off the main thread. `url` is your Kora API address. `getLicense()` returns the key, status, expiry, product and customer, and `getCode()` the HTTP status.
 
-## Other calls
+## Options
 
-```java
-kora.deactivate();
-String file = kora.requestOffline();
-boolean usable = kora.verifyOffline(file);
-JsonObject update = kora.checkUpdate("1.4.2", "stable");
-```
+| Builder method | Description |
+|---|---|
+| `apiKey(String)` | Sent as `Authorization: Bearer`. Needed when Require API Key is on. |
+| `intervalMs(long)` | Re-check the license on this interval after a valid result. |
+| `onInvalid(Consumer<KoraResponse>)` | Called with the result when a re-check fails. |
 
-Call `kora.stop()` in `onDisable` to stop the heartbeat.
+Call `kora.stop()` in `onDisable` to stop re-checking.
