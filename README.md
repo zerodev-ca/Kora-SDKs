@@ -1,6 +1,6 @@
 # Kora SDKs
 
-Official client SDKs for integrating Kora license validation and session management into applications, plugins, and game servers.
+Official client SDKs for checking Kora licenses from applications, plugins and game servers.
 
 ## Packages
 
@@ -13,13 +13,10 @@ Official client SDKs for integrating Kora license validation and session managem
 
 ## Features
 
-- Ed25519 response signature validation using backend public keys, with nonce and timestamp checks against replayed answers.
-- Automatic hardware identification (HWID) hashing across platforms.
-- Background session keep-alive heartbeats.
-- Offline license file and grace period verification.
-- Variable and user variable retrieval during validation.
-- Device release, offline license requests and update checks.
+- License validation against a product, with the license, product and customer in the answer.
+- Optional API key, for when **Require API Key** is on in the Kora dashboard.
+- Optional re-check on an interval that reports when a license stops being valid.
 
 ## Server
 
-Point `url` at your Kora API followed by `/api/v1`. Every SDK posts to `/licenses/validate`, `/licenses/deactivate`, `/licenses/offline` and `/updates/check`, and verifies the `x-kora-signature` header with the public key from `GET /api/v1/public-key`.
+Set `url` to your Kora API address. Every SDK posts `license_key` and `product_name` to `/api/v1/licenses/validate` and sends `Authorization: Bearer <api key>` when an API key is set. The **Integration** page in the Kora dashboard shows the address and ready-to-copy examples.
