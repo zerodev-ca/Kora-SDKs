@@ -3,6 +3,11 @@
     "version": "2.0.0",
     "description": "Official Node.js and TypeScript SDK for Kora licensing",
     "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/zerodev-ca/Kora-SDKs.git",
+        "directory": "packages/node"
+    },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "files": [
