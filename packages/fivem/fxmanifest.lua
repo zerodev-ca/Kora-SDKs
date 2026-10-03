@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'Zero Development'
 description 'Official FiveM SDK for Kora licensing'
-version '1.1.0'
+version '2.0.0'
 
 server_scripts {
     'server/kora.js'
