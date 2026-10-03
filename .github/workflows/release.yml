@@ -52,9 +52,32 @@ jobs:
           packages-dir: packages/python/dist/
           skip-existing: true
 
+  github-release:
+    if: inputs.target == 'all' || inputs.target == 'java' || inputs.target == 'fivem' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=v$(node -p 'require("./packages/node/package.json").version')" >> "$GITHUB_OUTPUT"
+          fi
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "${{ steps.tag.outputs.tag }}" > /dev/null 2>&1 || gh release create "${{ steps.tag.outputs.tag }}" --target "${{ github.sha }}" --title "${{ steps.tag.outputs.tag }}" --generate-notes
+
   release-java:
+    needs: github-release
     if: inputs.target == 'all' || inputs.target == 'java' || github.event_name == 'release'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -62,22 +85,21 @@ jobs:
           distribution: "temurin"
           java-version: "17"
       - run: cd packages/java && mvn clean package
-      - name: Upload Java JAR to Release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: packages/java/target/*.jar
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.github-release.outputs.tag }}" packages/java/target/*.jar --clobber
 
   release-fivem:
+    needs: github-release
     if: inputs.target == 'all' || inputs.target == 'fivem' || github.event_name == 'release'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - run: |
           cd packages
           zip -r kora-fivem.zip fivem
-      - name: Upload FiveM ZIP to Release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: packages/kora-fivem.zip
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.github-release.outputs.tag }}" packages/kora-fivem.zip --clobber
