@@ -1,23 +1,15 @@
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 @dataclass
 class ValidationResponse:
     valid: bool
+    code: str
     message: str
-    code: int
     license: Optional[Dict[str, Any]] = None
-    nonce: Optional[str] = None
     timestamp: Optional[int] = None
-    raw: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
-class OfflineResponse(ValidationResponse):
-    offline: Optional[Dict[str, Any]] = None
-
-@dataclass
-class UpdateResponse(ValidationResponse):
-    update_available: bool = False
-    current: Optional[str] = None
-    latest: Optional[Dict[str, Any]] = None
-    download_url: Optional[str] = None
+class Page:
+    total: int
+    rows: List[Dict[str, Any]] = field(default_factory=list)

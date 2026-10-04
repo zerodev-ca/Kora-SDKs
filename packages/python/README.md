@@ -1,65 +1,47 @@
 # zerodev-kora
 
-Official Python SDK for Kora licensing.
-
-## Installation
+Official Python SDK for Kora.
 
 ```bash
 pip install zerodev-kora
 ```
 
-## Usage
+## Validation
 
 ```python
-import os, sys
 from kora import Client
 
-client = Client(
-    url="https://api.yourdomain.com",
-    product="MySoftware",
-    key=os.environ["LICENSE_KEY"],
-    public_key=os.environ["KORA_PUBLIC_KEY"]
-)
+kora = Client("https://kora.example.com", product="MyApp", public_key=open("kora.pem").read())
 
-result = client.validate()
+result = kora.validate("XXXXX-XXXXX-XXXXX-XXXXX")
 if not result.valid:
-    sys.exit(result.message)
+    raise SystemExit(result.message)
 ```
 
-`result` holds `valid`, `message`, `code` (the HTTP status), `license` and the full answer in `raw`. `license["addons"]` lists the addons attached to the license, each with `id`, `name`, `price` and `currency`. With `public_key` set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or the call raises.
+`result` holds `valid`, `code`, `message`, `license` and `timestamp`. With `public_key` set, an answer without a valid `x-kora-signature` raises `KoraError`.
+
+## Licenses, products and customers
+
+```python
+kora = Client("https://kora.example.com", api_key="kora_...")
+
+product = kora.products.create(name="MyApp", version="1.0.0")
+customer = kora.customers.create(name="Jane", email="jane@example.com")
+license = kora.licenses.create(product_id=product["id"], customer_id=customer["id"])
+
+page = kora.licenses.list(status="active", limit=25)
+kora.licenses.update(license["id"], status="suspended")
+kora.licenses.delete(license["id"])
+```
+
+Every resource has `list`, `get`, `create`, `update` and `delete`. `delete(id, force=True)` forces removal of products and customers that still have licenses. Failed requests raise `KoraError` with `status`.
 
 ## Options
 
-| Option | Description |
+| Argument | Description |
 |---|---|
-| `api_key` | Sent as `Authorization: Bearer`. Needed when Require API Key is on. |
+| `url` | Kora API address. |
+| `api_key` | API token, sent as `Authorization: Bearer`. |
+| `product` | Default product name for `validate`. |
 | `public_key` | Kora's Ed25519 public key. Turns on signature checks. |
-| `hwid` | Override the hardware ID, which is otherwise a hash of this machine. |
-| `version` | Your product version, shown on the device in Kora. |
-| `interval_sec` | Re-check the license on this interval after a valid result. |
-| `on_invalid` | Called with the result when a re-check fails. |
-| `timeout_sec` / `max_skew_sec` | Request timeout and allowed clock drift. |
-
-## Offline licenses
-
-```python
-import json
-
-answer = client.offline()
-with open("license.json", "w") as file:
-    json.dump(answer.offline, file)
-
-with open("license.json") as file:
-    if client.verify_offline(file.read()) is None:
-        sys.exit("License file is invalid or expired")
-```
-
-## Updates
-
-```python
-update = client.check_update("1.4.2", "stable")
-if update.update_available:
-    print(update.latest["version"], update.download_url)
-```
-
-Call `client.stop()` to stop re-checking.
+| `timeout_sec` | Request timeout. Defaults to 15. |
