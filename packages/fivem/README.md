@@ -1,25 +1,23 @@
 # kora-fivem
 
-Official FiveM and RedM SDK for Kora licensing. It runs as server-side JavaScript and is called the same way from Lua or JavaScript.
+Official FiveM and RedM SDK for Kora. It runs as server-side JavaScript and is called the same way from Lua or JavaScript.
 
 ## Installation
 
 Copy this folder into `resources/kora-fivem` and add `ensure kora-fivem` to `server.cfg` before your own resource.
 
-## Usage
+## Validation
 
 ```lua
 local config = {
-    url = "https://api.yourdomain.com",
+    url = "https://kora.example.com",
     product = "MyScript",
-    key = GetConvar("my_script_license", ""),
     publicKey = [[-----BEGIN PUBLIC KEY-----
 ...
------END PUBLIC KEY-----]],
-    intervalMs = 300000
+-----END PUBLIC KEY-----]]
 }
 
-exports["kora-fivem"]:validate(config, function(valid, data)
+exports["kora-fivem"]:validate(config, GetConvar("my_script_license", ""), function(valid, data)
     if not valid then
         print("^1" .. data.message .. "^7")
         StopResource(GetCurrentResourceName())
@@ -27,27 +25,29 @@ exports["kora-fivem"]:validate(config, function(valid, data)
 end)
 ```
 
-`data` holds `valid`, `message`, `code` (the HTTP status) and `license`. `data.license.addons` lists the addons attached to the license, each with `id`, `name`, `price` and `currency`. With `publicKey` set, every answer must carry a valid `x-kora-signature`, the nonce the SDK sent and a recent timestamp.
+`data` holds `valid`, `code`, `message` and `license`. If the request fails, `data` holds `message` and `status`.
 
-The hardware ID is a hash of the server's `sv_licenseKeyToken`, so one Cfx.re server key counts as one device. Pass `hwid` to override it.
+## Licenses, products and customers
+
+`licenses`, `products` and `customers` take an action (`list`, `get`, `create`, `update`, `delete`) and an arguments table with `id`, `fields`, `query` or `force`.
+
+```lua
+local admin = { url = "https://kora.example.com", apiKey = GetConvar("kora_token", "") }
+
+exports["kora-fivem"]:licenses(admin, "create", { fields = { product_id = 1, customer_id = 4 } }, function(success, license)
+    if success then print(license.key) end
+end)
+
+exports["kora-fivem"]:licenses(admin, "list", { query = { status = "active" } }, function(success, page)
+    if success then print(page.total) end
+end)
+```
 
 ## Options
 
 | Field | Description |
 |---|---|
-| `apiKey` | Sent as `Authorization: Bearer`. Needed when Require API Key is on. |
+| `url` | Kora API address. |
+| `apiKey` | API token, sent as `Authorization: Bearer`. |
+| `product` | Default product name for `validate`. |
 | `publicKey` | Kora's Ed25519 public key. Turns on signature checks. |
-| `version` | Your script version, shown on the device in Kora. |
-| `intervalMs` | Re-check on this interval after a valid result. A failed re-check fires `kora:invalid` on the server. |
-
-## Updates
-
-```lua
-exports["kora-fivem"]:checkUpdate(config, "1.4.2", function(available, data)
-    if available then
-        print("Version " .. data.latest.version .. " is available")
-    end
-end)
-```
-
-Call `exports["kora-fivem"]:stop(config)` to stop re-checking.

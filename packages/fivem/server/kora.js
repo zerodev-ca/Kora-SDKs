@@ -3,112 +3,87 @@ const http = require("http");
 const https = require("https");
 
 class Kora {
-    constructor() {
-        this.timers = new Map();
-    }
-
-    id(config) {
-        return `${config.url}|${config.key}`;
-    }
-
-    hwid(config) {
-        if (config.hwid) return String(config.hwid);
-        return crypto.createHash("sha256").update(GetConvar("sv_licenseKeyToken", "fivem-server")).digest("hex");
-    }
-
     endpoint(config, path) {
         return `${String(config.url).replace(/\/+$/, "").replace(/\/api\/v1$/, "")}/api/v1${path}`;
     }
 
-    post(config, path, body) {
+    send(config, method, path, body) {
         return new Promise((resolve, reject) => {
+            const payload = body === undefined ? "" : JSON.stringify(body);
             const target = new URL(this.endpoint(config, path));
-            const payload = JSON.stringify(body);
-            const headers = { "content-type": "application/json", accept: "application/json", "content-length": Buffer.byteLength(payload), ...(config.apiKey ? { authorization: `Bearer ${config.apiKey}` } : {}) };
-            const request = (target.protocol === "https:" ? https : http).request(target, { method: "POST", headers, timeout: 15000 }, response => {
+            const request = (target.protocol === "https:" ? https : http).request(target, {
+                method,
+                headers: { "content-type": "application/json", accept: "application/json", "content-length": Buffer.byteLength(payload), ...(config.apiKey ? { authorization: `Bearer ${config.apiKey}` } : {}) },
+                timeout: 15000
+            }, response => {
                 const chunks = [];
                 response.on("data", chunk => chunks.push(chunk));
-                response.on("end", () => resolve({ status: response.statusCode, headers: response.headers, text: Buffer.concat(chunks).toString("utf8") }));
+                response.on("end", () => {
+                    const text = Buffer.concat(chunks).toString("utf8");
+                    resolve({ status: response.statusCode, signature: response.headers["x-kora-signature"], text, data: text.startsWith("{") ? JSON.parse(text) : {} });
+                });
             });
             request.on("error", reject);
-            request.on("timeout", () => request.destroy(new Error("The license server timed out")));
+            request.on("timeout", () => request.destroy(new Error("Kora timed out")));
             request.end(payload);
         });
     }
 
-    check(config, response, nonce) {
-        const signature = response.headers["x-kora-signature"];
-        if (typeof signature !== "string" || !crypto.verify(null, Buffer.from(response.text, "utf8"), crypto.createPublicKey(config.publicKey), Buffer.from(signature, "base64"))) throw new Error("Response signature verification failed");
-        const data = JSON.parse(response.text);
-        if (data.nonce !== nonce) throw new Error("Response does not belong to this request");
-        if (typeof data.timestamp !== "number" || Math.abs(Date.now() - data.timestamp) > 300000) throw new Error("Response is too old, check the server clock");
+    fail(reply) {
+        return Object.assign(new Error(typeof reply.data.error === "string" ? reply.data.error : `Kora answered with status ${reply.status}`), { status: reply.status });
     }
 
-    async request(config, path, extra) {
-        if (!config.key) throw new Error("License key is required");
-        const nonce = crypto.randomBytes(16).toString("hex");
-        const response = await this.post(config, path, {
-            license_key: config.key,
-            product_name: config.product,
-            hwid: this.hwid(config),
-            device_name: GetConvar("sv_hostname", "FiveM server"),
-            platform: "fivem",
-            ...(config.version ? { version: String(config.version) } : {}),
-            nonce,
-            ...(extra ? extra : {})
-        });
-        if (config.publicKey) this.check(config, response, nonce);
-        const data = (() => {
-            try {
-                return JSON.parse(response.text);
-            } catch {
-                return {};
+    verified(config, reply) {
+        if (!config.publicKey) return true;
+        try {
+            return typeof reply.signature === "string" && crypto.verify(null, Buffer.from(reply.text, "utf8"), crypto.createPublicKey(config.publicKey), Buffer.from(reply.signature, "base64"));
+        } catch {
+            return false;
+        }
+    }
+
+    async validate(config, key, product) {
+        const name = product ? product : config.product;
+        const reply = await this.send(config, "POST", "/licenses/validate", { license_key: key, ...(name ? { product_name: name } : {}) });
+        if (reply.status === 429 || reply.status >= 500) throw this.fail(reply);
+        if (!this.verified(config, reply)) throw Object.assign(new Error("Response signature verification failed"), { status: reply.status });
+        return reply.data;
+    }
+
+    async call(config, method, path, body) {
+        const reply = await this.send(config, method, path, body);
+        if (reply.status >= 400) throw this.fail(reply);
+        return reply.data;
+    }
+
+    async resource(config, name, single, action, args) {
+        const path = `/${name}/${encodeURIComponent(String(args.id))}`;
+        switch (action) {
+            case "list": {
+                const data = await this.call(config, "GET", `/${name}?${new URLSearchParams(args.query ? Object.entries(args.query).map(([key, value]) => [key, String(value)]) : [])}`);
+                return { total: data.total, rows: data[name] };
             }
-        })();
-        return {
-            ...data,
-            valid: data.valid === true,
-            message: typeof data.message === "string" ? data.message : typeof data.error === "string" ? data.error : `Kora answered with status ${response.status}`,
-            code: response.status,
-            license: data.license ? data.license : null
-        };
+            case "get":
+                return this.call(config, "GET", path);
+            case "create":
+                return (await this.call(config, "POST", `/${name}`, args.fields))[single];
+            case "update":
+                return (await this.call(config, "PATCH", path, args.fields))[single];
+            case "delete":
+                return this.call(config, "DELETE", args.force ? `${path}?force=true` : path);
+            default:
+                throw new Error(`Unknown action ${action}`);
+        }
     }
 
-    validate(config, callback) {
-        this.request(config, "/licenses/validate")
-            .then(data => {
-                if (data.valid) this.watch(config);
-                callback(data.valid, data);
-            })
-            .catch(error => callback(false, { valid: false, message: error.message, code: 0, license: null }));
-    }
-
-    checkUpdate(config, version, callback) {
-        this.request(config, "/updates/check", { version: String(version), channel: config.channel ? String(config.channel) : "stable" })
-            .then(data => callback(data.update_available === true, data))
-            .catch(error => callback(false, { valid: false, message: error.message, code: 0, license: null }));
-    }
-
-    watch(config) {
-        if (!config.intervalMs || this.timers.has(this.id(config))) return;
-        this.timers.set(this.id(config), setInterval(() => {
-            this.request(config, "/licenses/validate")
-                .then(data => {
-                    if (!data.valid) emit("kora:invalid", data);
-                })
-                .catch(error => console.log(`^3[Kora] ${error.message}^7`));
-        }, Number(config.intervalMs)));
-    }
-
-    stop(config) {
-        if (!this.timers.has(this.id(config))) return;
-        clearInterval(this.timers.get(this.id(config)));
-        this.timers.delete(this.id(config));
+    reply(promise, callback) {
+        promise.then(data => callback(true, data)).catch(error => callback(false, { message: error.message, status: error.status ? error.status : 0 }));
     }
 }
 
 const kora = new Kora();
 
-exports("validate", (config, callback) => kora.validate(config, callback));
-exports("checkUpdate", (config, version, callback) => kora.checkUpdate(config, version, callback));
-exports("stop", config => kora.stop(config));
+exports("validate", (config, key, callback, product) => kora.reply(kora.validate(config, key, product), (success, data) => callback(success && data.valid === true, data)));
+exports("licenses", (config, action, args, callback) => kora.reply(kora.resource(config, "licenses", "license", action, args), callback));
+exports("products", (config, action, args, callback) => kora.reply(kora.resource(config, "products", "product", action, args), callback));
+exports("customers", (config, action, args, callback) => kora.reply(kora.resource(config, "customers", "customer", action, args), callback));
