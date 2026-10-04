@@ -1,68 +1,49 @@
 # @zerodev-ca/kora
 
-Official Node.js and TypeScript SDK for Kora licensing.
-
-## Installation
+Official Node.js and TypeScript SDK for Kora.
 
 ```bash
 npm install @zerodev-ca/kora
 ```
 
-## Usage
+## Validation
 
-```typescript
+```ts
 import { Client } from "@zerodev-ca/kora";
 
-const client = new Client({
-    url: "https://api.yourdomain.com",
-    product: "MySoftware",
-    key: process.env.LICENSE_KEY,
-    publicKey: process.env.KORA_PUBLIC_KEY
-});
+const kora = new Client({ url: "https://kora.example.com", product: "MyPlugin", publicKey: process.env.KORA_PUBLIC_KEY });
 
-const result = await client.validate();
-if (!result.valid) {
-    console.error(result.message);
-    process.exit(1);
-}
+const result = await kora.validate("XXXXX-XXXXX-XXXXX-XXXXX");
+if (!result.valid) throw new Error(result.message);
+console.log(result.license.customer);
 ```
 
-`result` holds `valid`, `message`, `code` (the HTTP status) and `license`, which carries the key, status, expiry, product, customer, the `addons` attached to the license (each with `id`, `name`, `price` and `currency`) and your custom `data`. With `publicKey` set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or the call throws.
+`result` holds `valid`, `code`, `message`, `license` and `timestamp`. With `publicKey` set, an answer without a valid `x-kora-signature` throws.
+
+## Licenses, products and customers
+
+Pass an API token with the scopes you need.
+
+```ts
+const kora = new Client({ url: "https://kora.example.com", apiKey: process.env.KORA_TOKEN });
+
+const product = await kora.products.create({ name: "MyPlugin", version: "1.0.0" });
+const customer = await kora.customers.create({ name: "Jane", email: "jane@example.com" });
+const license = await kora.licenses.create({ product_id: product.id, customer_id: customer.id });
+
+const { total, rows } = await kora.licenses.list({ status: "active", limit: 25 });
+await kora.licenses.update(license.id, { status: "suspended" });
+await kora.licenses.delete(license.id);
+```
+
+Every resource has `list`, `get`, `create`, `update` and `delete`. `delete(id, true)` forces removal of products and customers that still have licenses. Failed requests throw a `KoraError` with `status`.
 
 ## Options
 
-| Option | Description |
+| Field | Description |
 |---|---|
-| `apiKey` | Sent as `Authorization: Bearer`. Needed when Require API Key is on. |
+| `url` | Kora API address. |
+| `apiKey` | API token, sent as `Authorization: Bearer`. |
+| `product` | Default product name for `validate`. |
 | `publicKey` | Kora's Ed25519 public key. Turns on signature checks. |
-| `hwid` | Override the hardware ID, which is otherwise a hash of this machine. |
-| `version` | Your product version, shown on the device in Kora. |
-| `intervalMs` | Re-check the license on this interval after a valid result. |
-| `onInvalid` | Called with the result when a re-check fails. |
-| `timeoutMs` / `maxSkewMs` | Request timeout and allowed clock drift. |
-
-## Offline licenses
-
-```typescript
-import { writeFileSync, readFileSync } from "fs";
-
-const answer = await client.offline();
-if (answer.offline !== null) {
-    writeFileSync("license.json", JSON.stringify(answer.offline));
-}
-
-if (client.verifyOffline(readFileSync("license.json", "utf8")) === null) {
-    process.exit(1);
-}
-```
-
-## Updates
-
-```typescript
-const update = await client.checkUpdate("1.4.2", "stable");
-if (update.update_available && update.latest !== null) {
-    console.log(`Version ${update.latest.version}: ${update.download_url}`);
-}
-```
-
-Call `client.stop()` to stop re-checking.
+| `timeoutMs` | Request timeout. Defaults to 15000. |
