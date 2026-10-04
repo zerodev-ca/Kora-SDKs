@@ -1,57 +1,45 @@
 # kora-java
 
-Official Java SDK for Kora licensing. Java 17+, works on Paper, Spigot, Folia, Velocity, Fabric and Forge. Uses Gson, which Minecraft already ships.
-
-## Installation
+Official Java SDK for Kora. Java 17+, works on Paper, Spigot, Velocity and Folia.
 
 ```xml
 <dependency>
     <groupId>ca.zerodev</groupId>
     <artifactId>kora-java</artifactId>
-    <version>2.1.0</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
-## Usage
+## Validation
 
 ```java
 KoraClient kora = new KoraClient.Builder()
-    .url("https://api.yourdomain.com")
+    .url("https://kora.example.com")
     .product("MyPlugin")
-    .key(getConfig().getString("license-key"))
-    .publicKey(PUBLIC_KEY)
+    .publicKey(publicKeyPem)
     .build();
 
-KoraResponse result = kora.validate();
+KoraResponse result = kora.validate(getConfig().getString("license"));
 if (!result.isValid()) {
     getLogger().severe(result.getMessage());
     getServer().getPluginManager().disablePlugin(this);
 }
 ```
 
-Run `validate()` off the main thread. `getLicense()` returns the key, status, expiry, product, customer, the attached `getAddons()` (each with id, name, price and currency) and custom `getData()`. With a public key set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or a `KoraException` is thrown.
+`KoraResponse` has `isValid()`, `getCode()`, `getMessage()`, `getLicense()` and `getTimestamp()`. With a public key set, an answer without a valid `x-kora-signature` throws `KoraException`.
 
-## Options
-
-| Builder method | Description |
-|---|---|
-| `apiKey(String)` | Sent as `Authorization: Bearer`. Needed when Require API Key is on. |
-| `publicKey(String)` | Kora's Ed25519 public key. Turns on signature checks. |
-| `hwid(String)` | Override the hardware ID, which is otherwise a hash of this machine. |
-| `version(String)` | Your plugin version, shown on the device in Kora. |
-| `intervalMs(long)` | Re-check the license on this interval after a valid result. |
-| `onInvalid(Consumer<KoraResponse>)` | Called with the result when a re-check fails. |
-
-## Offline licenses and updates
+## Licenses, products and customers
 
 ```java
-String file = kora.offline().getOffline();
-boolean usable = kora.verifyOffline(file);
+KoraClient kora = new KoraClient.Builder().url("https://kora.example.com").apiKey(token).build();
 
-KoraResponse update = kora.checkUpdate("1.4.2", "stable");
-if (update.isUpdateAvailable()) {
-    getLogger().info("Version " + update.getLatest().getVersion() + " is at " + update.getDownloadUrl());
-}
+JsonObject product = kora.products().create(Map.of("name", "MyPlugin", "version", "1.0.0"));
+JsonObject customer = kora.customers().create(Map.of("name", "Jane", "email", "jane@example.com"));
+JsonObject license = kora.licenses().create(Map.of("product_id", product.get("id").getAsLong(), "customer_id", customer.get("id").getAsLong()));
+
+KoraPage page = kora.licenses().list(Map.of("status", "active", "limit", 25));
+kora.licenses().update(license.get("id").getAsLong(), Map.of("status", "suspended"));
+kora.licenses().delete(license.get("id").getAsLong());
 ```
 
-Call `kora.stop()` in `onDisable` to stop re-checking.
+Every resource has `list`, `get`, `create`, `update` and `delete`. `delete(id, true)` forces removal of products and customers that still have licenses. Failed requests throw `KoraException` with `getStatus()`.
