@@ -2,6 +2,8 @@ package ca.zerodev.kora;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import java.util.Collections;
+import java.util.List;
 
 public class KoraResponse {
     private boolean valid;
@@ -57,12 +59,36 @@ public class KoraResponse {
         }
     }
 
+    public static class Addon {
+        private long id;
+        private String name;
+        private double price;
+        private String currency;
+
+        public long getId() {
+            return this.id;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public double getPrice() {
+            return this.price;
+        }
+
+        public String getCurrency() {
+            return this.currency;
+        }
+    }
+
     public static class License {
         private String key;
         private String status;
         private String expires_at;
         private Product product;
         private Customer customer;
+        private List<Addon> addons;
         private JsonObject data;
 
         public String getKey() {
@@ -83,6 +109,10 @@ public class KoraResponse {
 
         public Customer getCustomer() {
             return this.customer;
+        }
+
+        public List<Addon> getAddons() {
+            return this.addons != null ? this.addons : Collections.emptyList();
         }
 
         public JsonObject getData() {

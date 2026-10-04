@@ -27,7 +27,7 @@ exports["kora-fivem"]:validate(config, function(valid, data)
 end)
 ```
 
-`data` holds `valid`, `message`, `code` (the HTTP status) and `license`. With `publicKey` set, every answer must carry a valid `x-kora-signature`, the nonce the SDK sent and a recent timestamp.
+`data` holds `valid`, `message`, `code` (the HTTP status) and `license`. `data.license.addons` lists the addons attached to the license, each with `id`, `name`, `price` and `currency`. With `publicKey` set, every answer must carry a valid `x-kora-signature`, the nonce the SDK sent and a recent timestamp.
 
 The hardware ID is a hash of the server's `sv_licenseKeyToken`, so one Cfx.re server key counts as one device. Pass `hwid` to override it.
 

@@ -29,7 +29,7 @@ if (!result.isValid()) {
 }
 ```
 
-Run `validate()` off the main thread. `getLicense()` returns the key, status, expiry, product, customer and custom `getData()`. With a public key set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or a `KoraException` is thrown.
+Run `validate()` off the main thread. `getLicense()` returns the key, status, expiry, product, customer, the attached `getAddons()` (each with id, name, price and currency) and custom `getData()`. With a public key set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or a `KoraException` is thrown.
 
 ## Options
 

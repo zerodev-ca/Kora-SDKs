@@ -26,7 +26,7 @@ if not result.valid:
     sys.exit(result.message)
 ```
 
-`result` holds `valid`, `message`, `code` (the HTTP status), `license` and the full answer in `raw`. With `public_key` set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or the call raises.
+`result` holds `valid`, `message`, `code` (the HTTP status), `license` and the full answer in `raw`. `license["addons"]` lists the addons attached to the license, each with `id`, `name`, `price` and `currency`. With `public_key` set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or the call raises.
 
 ## Options
 

@@ -25,12 +25,20 @@ export interface Customer {
     discord_id: string | null;
 }
 
+export interface Addon {
+    id: number;
+    name: string;
+    price: number;
+    currency: string;
+}
+
 export interface License {
     key: string;
     status: string;
     expires_at: string | null;
     product: Product;
     customer: Customer | null;
+    addons: Addon[];
     data: Record<string, unknown>;
 }
 

@@ -27,7 +27,7 @@ if (!result.valid) {
 }
 ```
 
-`result` holds `valid`, `message`, `code` (the HTTP status) and `license`, which carries the key, status, expiry, product, customer and your custom `data`. With `publicKey` set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or the call throws.
+`result` holds `valid`, `message`, `code` (the HTTP status) and `license`, which carries the key, status, expiry, product, customer, the `addons` attached to the license (each with `id`, `name`, `price` and `currency`) and your custom `data`. With `publicKey` set, every answer must carry a valid `x-kora-signature`, the nonce the client sent and a recent timestamp, or the call throws.
 
 ## Options
 
