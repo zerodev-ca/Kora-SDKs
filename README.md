@@ -32,3 +32,17 @@ Official client SDKs for Kora. Each SDK validates license keys and manages licen
 ## Server
 
 Set `url` to your Kora API address. Validation calls `POST /api/v1/licenses/validate`, `POST /api/v1/licenses/activate` and `POST /api/v1/licenses/deactivate` and needs no API key unless **Require API Key** is on. Offline files come from `GET /api/v1/licenses/:id/file`. Licenses, products and customers use `/api/v1/licenses`, `/api/v1/products` and `/api/v1/customers` and need an API token from the **API Tokens** page with the matching scopes. The **Integration** page in the dashboard has the request URL, the public key and a license tester.
+
+## Releasing
+
+Bump the version in every package, then publish a GitHub release named `v<version>`. The **Release SDKs** workflow runs on the release, or by hand for one package.
+
+| Package | Published to | Needs |
+| --- | --- | --- |
+| Node | npm, staged for approval | Trusted publisher on npmjs.com |
+| Python | PyPI | Trusted publisher on pypi.org, `pypi` environment |
+| Java, FiveM | Release assets | Nothing |
+| Go | `packages/go/v<version>` tag, Go proxy | Nothing |
+| PHP | Packagist, from the root `composer.json` and the release tag | Repository submitted on packagist.org |
+| .NET | NuGet | `NUGET_API_KEY` secret |
+| Rust | crates.io | `CARGO_REGISTRY_TOKEN` secret |

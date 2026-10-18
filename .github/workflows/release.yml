@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "Package to release (all, node, python, java, fivem)"
+        description: "Package to release (all, node, python, java, fivem, go, dotnet, rust)"
         required: true
         default: "all"
 
@@ -103,3 +103,67 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ needs.github-release.outputs.tag }}" packages/kora-fivem.zip --clobber
+
+  release-go:
+    if: inputs.target == 'all' || inputs.target == 'go' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: packages/go/go.mod
+      - run: cd packages/go && go vet ./... && go build ./...
+      - run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            version="${{ github.event.release.tag_name }}"
+          else
+            version="v$(node -p 'require("./packages/node/package.json").version')"
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/packages/go/$version" > /dev/null; then
+            echo "Tag already exists, skipping."
+            exit 0
+          fi
+          git tag "packages/go/$version" "${{ github.sha }}"
+          git push origin "packages/go/$version"
+          curl -sf --retry 5 --retry-all-errors "https://proxy.golang.org/github.com/zerodev-ca/!kora-!s!d!ks/packages/go/v3/@v/$version.info"
+
+  release-dotnet:
+    if: inputs.target == 'all' || inputs.target == 'dotnet' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet pack packages/dotnet/Kora -c Release -o packages/dotnet/dist
+      - env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::warning::NUGET_API_KEY is not set, the .NET SDK was not published."
+            exit 0
+          fi
+          dotnet nuget push "packages/dotnet/dist/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  release-rust:
+    if: inputs.target == 'all' || inputs.target == 'rust' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - working-directory: packages/rust
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo package
+          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "::warning::CARGO_REGISTRY_TOKEN is not set, the Rust SDK was not published."
+            exit 0
+          fi
+          version="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')"
+          if curl -sf -A "kora-sdks-release" "https://crates.io/api/v1/crates/zerodev-kora/$version" > /dev/null; then
+            echo "Version already published, skipping."
+            exit 0
+          fi
+          cargo publish
