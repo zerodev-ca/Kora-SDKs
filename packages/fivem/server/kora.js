@@ -42,12 +42,36 @@ class Kora {
         }
     }
 
-    async validate(config, key, product) {
-        const name = product ? product : config.product;
-        const reply = await this.send(config, "POST", "/licenses/validate", { license_key: key, ...(name ? { product_name: name } : {}) });
+    async check(config, path, body) {
+        const reply = await this.send(config, "POST", path, { ...(config.fields ? config.fields : {}), ...body });
         if (reply.status === 429 || reply.status >= 500) throw this.fail(reply);
         if (!this.verified(config, reply)) throw Object.assign(new Error("Response signature verification failed"), { status: reply.status });
         return reply.data;
+    }
+
+    validate(config, key, product) {
+        const name = product ? product : config.product;
+        return this.check(config, "/licenses/validate", { license_key: key, ...(name ? { product_name: name } : {}) });
+    }
+
+    activate(config, key, product) {
+        const name = product ? product : config.product;
+        return this.check(config, "/licenses/activate", { license_key: key, ...(name ? { product_name: name } : {}) });
+    }
+
+    deactivate(config, key) {
+        return this.check(config, "/licenses/deactivate", { license_key: key });
+    }
+
+    offline(config, file) {
+        const [payload, signature] = String(file).trim().split(".");
+        if (!config.publicKey || !payload || !signature) throw new Error("Offline license needs a publicKey and a well-formed file");
+        const text = Buffer.from(payload, "base64url").toString("utf8");
+        if (!crypto.verify(null, Buffer.from(text, "utf8"), crypto.createPublicKey(config.publicKey), Buffer.from(signature, "base64url"))) throw new Error("Offline license signature verification failed");
+        const license = JSON.parse(text);
+        if (Date.parse(license.refresh_after) < Date.now()) throw new Error("Offline license needs a refresh");
+        if (license.expires_at !== null && Date.parse(license.expires_at) < Date.now()) throw new Error("Offline license expired");
+        return license;
     }
 
     async call(config, method, path, body) {
@@ -71,6 +95,8 @@ class Kora {
                 return (await this.call(config, "PATCH", path, args.fields))[single];
             case "delete":
                 return this.call(config, "DELETE", args.force ? `${path}?force=true` : path);
+            case "merge":
+                return (await this.call(config, "POST", `${path}/merge`, { customer_id: args.customer_id })).customer;
             default:
                 throw new Error(`Unknown action ${action}`);
         }
@@ -84,6 +110,9 @@ class Kora {
 const kora = new Kora();
 
 exports("validate", (config, key, callback, product) => kora.reply(kora.validate(config, key, product), (success, data) => callback(success && data.valid === true, data)));
+exports("activate", (config, key, callback, product) => kora.reply(kora.activate(config, key, product), (success, data) => callback(success && data.valid === true, data)));
+exports("deactivate", (config, key, callback) => kora.reply(kora.deactivate(config, key), (success, data) => callback(success && data.success === true, data)));
+exports("offline", (config, file, callback) => kora.reply(Promise.resolve().then(() => kora.offline(config, file)), callback));
 exports("licenses", (config, action, args, callback) => kora.reply(kora.resource(config, "licenses", "license", action, args), callback));
 exports("products", (config, action, args, callback) => kora.reply(kora.resource(config, "products", "product", action, args), callback));
 exports("customers", (config, action, args, callback) => kora.reply(kora.resource(config, "customers", "customer", action, args), callback));

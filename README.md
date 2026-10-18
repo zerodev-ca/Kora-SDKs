@@ -15,8 +15,10 @@ Official client SDKs for Kora. Each SDK validates license keys and manages licen
 
 - License validation with the license, product, customer and addons in the answer.
 - Optional Ed25519 signature check on validation answers.
-- Create, read, update, delete and list licenses, products and customers.
+- Device activation and deactivation against whitelist seats.
+- Signed offline license files, checked without a network call.
+- Create, read, update, delete and list licenses, products and customers, plus customer merge.
 
 ## Server
 
-Set `url` to your Kora API address. Validation calls `POST /api/v1/licenses/validate` and needs no API key unless **Require API Key** is on. Licenses, products and customers use `/api/v1/licenses`, `/api/v1/products` and `/api/v1/customers` and need an API token from the **API Tokens** page with the matching scopes. The **Integration** page in the dashboard has the request URL, the public key and a license tester.
+Set `url` to your Kora API address. Validation calls `POST /api/v1/licenses/validate`, `POST /api/v1/licenses/activate` and `POST /api/v1/licenses/deactivate` and needs no API key unless **Require API Key** is on. Offline files come from `GET /api/v1/licenses/:id/file`. Licenses, products and customers use `/api/v1/licenses`, `/api/v1/products` and `/api/v1/customers` and need an API token from the **API Tokens** page with the matching scopes. The **Integration** page in the dashboard has the request URL, the public key and a license tester.

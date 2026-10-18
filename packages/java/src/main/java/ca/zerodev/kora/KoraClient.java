@@ -8,7 +8,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -117,23 +121,85 @@ public class KoraClient {
         return this.parse(response.body());
     }
 
-    public KoraResponse validate(String key) {
-        return this.validate(key, this.product);
-    }
-
-    public KoraResponse validate(String key, String product) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("license_key", key);
-        if (product != null) {
-            body.put("product_name", product);
-        }
-        HttpResponse<String> response = this.send("POST", "/licenses/validate", body);
+    private HttpResponse<String> check(String path, Map<String, Object> body) {
+        HttpResponse<String> response = this.send("POST", path, body);
         if (response.statusCode() == 429 || response.statusCode() >= 500) {
             throw this.fail(response);
         }
         if (this.publicKey != null && !this.publicKey.isEmpty() && !this.signature.verify(response.body(), response.headers().firstValue("x-kora-signature").orElse(null), this.publicKey)) {
             throw new KoraException("Response signature verification failed", response.statusCode());
         }
-        return this.gson.fromJson(response.body(), KoraResponse.class);
+        return response;
+    }
+
+    private Map<String, Object> body(String key, String product, Map<String, Object> fields) {
+        Map<String, Object> body = new HashMap<>(fields);
+        body.put("license_key", key);
+        if (product != null) {
+            body.put("product_name", product);
+        }
+        return body;
+    }
+
+    private String encode(Object value) {
+        return URLEncoder.encode(String.valueOf(value), StandardCharsets.UTF_8);
+    }
+
+    public KoraResponse validate(String key) {
+        return this.validate(key, this.product, Map.of());
+    }
+
+    public KoraResponse validate(String key, String product) {
+        return this.validate(key, product, Map.of());
+    }
+
+    public KoraResponse validate(String key, String product, Map<String, Object> fields) {
+        return this.gson.fromJson(this.check("/licenses/validate", this.body(key, product, fields)).body(), KoraResponse.class);
+    }
+
+    public KoraResponse activate(String key, Map<String, Object> fields) {
+        return this.activate(key, this.product, fields);
+    }
+
+    public KoraResponse activate(String key, String product, Map<String, Object> fields) {
+        return this.gson.fromJson(this.check("/licenses/activate", this.body(key, product, fields)).body(), KoraResponse.class);
+    }
+
+    public KoraDeactivation deactivate(String key, Map<String, Object> fields) {
+        return this.gson.fromJson(this.check("/licenses/deactivate", this.body(key, null, fields)).body(), KoraDeactivation.class);
+    }
+
+    public String file(Object id) {
+        HttpResponse<String> response = this.send("GET", "/licenses/" + this.encode(id) + "/file", null);
+        if (response.statusCode() >= 400) {
+            throw this.fail(response);
+        }
+        return response.body().trim();
+    }
+
+    public JsonObject offline(String file) {
+        if (this.publicKey == null || this.publicKey.isEmpty()) {
+            throw new KoraException("A publicKey is required to read offline licenses", 0);
+        }
+        String[] parts = file.trim().split("\\.");
+        if (parts.length != 2) {
+            throw new KoraException("Offline license file is malformed", 0);
+        }
+        String payload = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
+        if (!this.signature.verify(payload, Base64.getEncoder().encodeToString(Base64.getUrlDecoder().decode(parts[1])), this.publicKey)) {
+            throw new KoraException("Offline license signature verification failed", 0);
+        }
+        JsonObject license = JsonParser.parseString(payload).getAsJsonObject();
+        if (Instant.parse(license.get("refresh_after").getAsString()).isBefore(Instant.now())) {
+            throw new KoraException("Offline license needs a refresh", 0);
+        }
+        if (!license.get("expires_at").isJsonNull() && Instant.parse(license.get("expires_at").getAsString()).isBefore(Instant.now())) {
+            throw new KoraException("Offline license expired", 0);
+        }
+        return license;
+    }
+
+    public JsonObject merge(Object customer, Object duplicate) {
+        return this.call("POST", "/customers/" + this.encode(customer) + "/merge", Map.of("customer_id", duplicate)).getAsJsonObject("customer");
     }
 }

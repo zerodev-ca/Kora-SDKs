@@ -25,6 +25,8 @@ export interface Customer {
     name: string;
     email: string | null;
     discord_id: string | null;
+    blocked: boolean;
+    notes: string;
     created_at: string;
     updated_at: string;
 }
@@ -70,6 +72,8 @@ export interface CustomerInput {
     name: string;
     email?: string | null;
     discord_id?: string | null;
+    blocked?: boolean;
+    notes?: string;
 }
 
 export interface LicenseInput {
@@ -98,9 +102,10 @@ export interface ValidatedLicense {
     key: string;
     status: string;
     product: Pick<Product, "id" | "name" | "version" | "active">;
-    customer: Pick<Customer, "id" | "name" | "email" | "discord_id"> | null;
+    customer: Pick<Customer, "id" | "name" | "email" | "discord_id" | "blocked"> | null;
     addons: Addon[];
     expires_at: string | null;
+    whitelists: Record<string, string[]>;
 }
 
 export interface ValidationResponse {
@@ -109,4 +114,25 @@ export interface ValidationResponse {
     message: string;
     license: ValidatedLicense | null;
     timestamp: number;
+}
+
+export interface DeactivationResponse {
+    success: boolean;
+    code: "deactivated" | "not_activated" | "not_found" | "invalid_request" | "unauthorized";
+    message: string;
+    removed: number;
+    timestamp: number;
+}
+
+export interface OfflineLicense {
+    key: string;
+    license_id: number;
+    status: string;
+    product: Pick<Product, "id" | "name">;
+    customer: Pick<Customer, "id" | "name" | "email"> | null;
+    addons: string[];
+    whitelists: Record<string, string[]>;
+    expires_at: string | null;
+    issued_at: string;
+    refresh_after: string;
 }

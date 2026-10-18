@@ -20,6 +20,29 @@ if not result.valid:
 
 `result` holds `valid`, `code`, `message`, `license` and `timestamp`. With `public_key` set, an answer without a valid `x-kora-signature` raises `KoraError`.
 
+Extra fields are keyword arguments, for example the device id a whitelist group reads: `kora.validate(key, hwid=machine_id)`.
+
+## Devices
+
+```python
+activated = kora.activate(key, hwid=machine_id)
+if activated.code == "seats_full":
+    print(activated.message)
+
+kora.deactivate(key, hwid=machine_id)
+```
+
+`activate` takes a free seat in each whitelist group of the product for the values in the request, then validates. `deactivate` frees them and returns `success`, `code` (`deactivated`, `not_activated`, `not_found`) and `removed`.
+
+## Offline licenses
+
+```python
+file = admin.file(license["id"])
+offline = kora.offline(file)
+```
+
+`file` downloads a signed license file with an API token. `offline` checks the file against `public_key` without a network call and raises `KoraError` when the signature is wrong, the license expired or `refresh_after` has passed. Validate online first and fall back to the file when Kora cannot be reached.
+
 ## Licenses, products and customers
 
 ```python
@@ -34,7 +57,7 @@ kora.licenses.update(license["id"], status="suspended")
 kora.licenses.delete(license["id"])
 ```
 
-Every resource has `list`, `get`, `create`, `update` and `delete`. `delete(id, force=True)` forces removal of products and customers that still have licenses. Failed requests raise `KoraError` with `status`.
+Every resource has `list`, `get`, `create`, `update` and `delete`. Block a customer with `customers.update(id, blocked=True)` and fold a duplicate into a customer with `kora.merge(id, duplicate_id)`. `delete(id, force=True)` forces removal of products and customers that still have licenses. Failed requests raise `KoraError` with `status`.
 
 ## Options
 
