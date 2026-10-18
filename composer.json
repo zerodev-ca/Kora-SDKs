@@ -11,7 +11,15 @@
     },
     "autoload": {
         "psr-4": {
-            "ZeroDev\\Kora\\": "src/"
+            "ZeroDev\\Kora\\": "packages/php/src/"
         }
+    },
+    "homepage": "https://zerodev.ca/docs/kora/developer-documentation/sdks",
+    "archive": {
+        "exclude": [
+            "/*",
+            "!/packages/php",
+            "!/composer.json"
+        ]
     }
 }
