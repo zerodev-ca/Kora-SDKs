@@ -1,7 +1,7 @@
 # Kora Go SDK
 
 ```bash
-go get github.com/zerodev-ca/Kora-SDKs/packages/go
+go get github.com/zerodev-ca/Kora-SDKs/packages/go/v3
 ```
 
 ## Validation

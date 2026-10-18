@@ -12,7 +12,7 @@ Official client SDKs for Kora. Each SDK validates license keys and manages licen
 | `kora-fivem` | FiveM / RedM (callable from Lua and JS) | `packages/fivem` |
 | `ZeroDev.Kora` | .NET 8 | `packages/dotnet` |
 | `zerodev/kora` | PHP 8.1+ | `packages/php` |
-| `github.com/zerodev-ca/Kora-SDKs/packages/go` | Go 1.21+ | `packages/go` |
+| `github.com/zerodev-ca/Kora-SDKs/packages/go/v3` | Go 1.21+ | `packages/go` |
 | `zerodev-kora` | Rust | `packages/rust` |
 
 ## Templates
