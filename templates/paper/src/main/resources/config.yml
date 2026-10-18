@@ -1,0 +1,9 @@
+license: ""
+
+kora:
+  url: "https://api.example.com"
+  product: "MyPlugin"
+  public-key: |
+    -----BEGIN PUBLIC KEY-----
+    Paste the key from the Kora dashboard Integration page here.
+    -----END PUBLIC KEY-----

@@ -6,7 +6,7 @@ Official Java SDK for Kora. Java 17+, works on Paper, Spigot, Velocity and Folia
 <dependency>
     <groupId>ca.zerodev</groupId>
     <artifactId>kora-java</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
 </dependency>
 ```
 

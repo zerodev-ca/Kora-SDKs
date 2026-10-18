@@ -1,0 +1,5 @@
+name: MyPlugin
+version: ${project.version}
+main: com.example.plugin.MyPlugin
+api-version: "1.21"
+description: A Paper plugin licensed with Kora

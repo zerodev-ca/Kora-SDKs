@@ -10,6 +10,16 @@ Official client SDKs for Kora. Each SDK validates license keys and manages licen
 | `ca.zerodev:kora-java` | Java 17+ (Paper, Spigot, Velocity, Folia) | `packages/java` |
 | `zerodev-kora` | Python 3.8+ | `packages/python` |
 | `kora-fivem` | FiveM / RedM (callable from Lua and JS) | `packages/fivem` |
+| `ZeroDev.Kora` | .NET 8 | `packages/dotnet` |
+| `zerodev/kora` | PHP 8.1+ | `packages/php` |
+| `github.com/zerodev-ca/Kora-SDKs/packages/go` | Go 1.21+ | `packages/go` |
+| `zerodev-kora` | Rust | `packages/rust` |
+
+## Templates
+
+| Template | What it is | Directory |
+| --- | --- | --- |
+| Paper plugin | A Minecraft plugin with the license check, seat activation and an offline fallback built in | `templates/paper` |
 
 ## Features
 
