@@ -39,7 +39,6 @@ class Client
             throw new KoraException("Request to Kora failed: " . curl_error($handle));
         }
         $status = curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-        curl_close($handle);
         $data = json_decode($text, true);
         return ["status" => $status, "text" => $text, "data" => is_array($data) ? $data : [], "signature" => $signature];
     }
