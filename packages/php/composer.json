@@ -1,0 +1,17 @@
+{
+    "name": "zerodev/kora",
+    "description": "Official PHP SDK for Kora licensing",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "ext-sodium": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "ZeroDev\\Kora\\": "src/"
+        }
+    }
+}
