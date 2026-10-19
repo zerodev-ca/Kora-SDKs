@@ -132,20 +132,20 @@ jobs:
   release-dotnet:
     if: inputs.target == 'all' || inputs.target == 'dotnet' || github.event_name == 'release'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
       - run: dotnet pack packages/dotnet/Kora -c Release -o packages/dotnet/dist
-      - env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: |
-          if [ -z "$NUGET_API_KEY" ]; then
-            echo "::warning::NUGET_API_KEY is not set, the .NET SDK was not published."
-            exit 0
-          fi
-          dotnet nuget push "packages/dotnet/dist/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - run: dotnet nuget push "packages/dotnet/dist/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
   release-rust:
     if: inputs.target == 'all' || inputs.target == 'rust' || github.event_name == 'release'

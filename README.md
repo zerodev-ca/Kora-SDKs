@@ -44,5 +44,5 @@ Bump the version in every package, then publish a GitHub release named `v<versio
 | Java, FiveM | Release assets | Nothing |
 | Go | `packages/go/v<version>` tag, Go proxy | Nothing |
 | PHP | Packagist, from the root `composer.json` and the release tag | Repository submitted on packagist.org |
-| .NET | NuGet | `NUGET_API_KEY` secret |
+| .NET | NuGet | Trusted publishing policy for `release.yml` on nuget.org, `NUGET_USER` secret with the nuget.org username |
 | Rust | crates.io | `CARGO_REGISTRY_TOKEN` secret |
