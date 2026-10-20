@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Kora</RootNamespace>
     <PackageId>ZeroDev.Kora</PackageId>
-    <Version>3.1.1</Version>
+    <Version>3.2.0</Version>
     <Authors>Zero Development</Authors>
     <Description>Official .NET SDK for Kora licensing</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
