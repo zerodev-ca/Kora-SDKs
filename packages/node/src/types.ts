@@ -38,18 +38,28 @@ export interface Addon {
     currency: string;
 }
 
+export interface Policy {
+    id: number;
+    name: string;
+    type: "subscription" | "perpetual";
+}
+
 export interface License {
     id: number;
     key: string;
     status: string;
     product_id: number;
     customer_id: number;
+    policy_id: number | null;
     product_name: string | null;
+    policy_name: string | null;
     customer_name: string | null;
     product: Pick<Product, "id" | "name" | "version" | "active"> | null;
+    policy: Policy | null;
     customer: Pick<Customer, "id" | "name" | "email" | "discord_id"> | null;
     addons: number[];
     addon_names: string[];
+    max_machines: number;
     leaked: boolean;
     expires_at: string | null;
     last_validated_at: string | null;
@@ -79,9 +89,11 @@ export interface CustomerInput {
 export interface LicenseInput {
     product_id: number | string;
     customer_id: number | string;
+    policy_id?: number | string | null;
     key?: string;
     status?: string;
     addons?: number[];
+    max_machines?: number | null;
     expires_at?: string | null;
     leaked?: boolean;
 }
@@ -102,6 +114,7 @@ export interface ValidatedLicense {
     key: string;
     status: string;
     product: Pick<Product, "id" | "name" | "version" | "active">;
+    policy: Policy | null;
     customer: Pick<Customer, "id" | "name" | "email" | "discord_id" | "blocked"> | null;
     addons: Addon[];
     expires_at: string | null;

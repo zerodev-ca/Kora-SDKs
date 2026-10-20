@@ -73,11 +73,30 @@ public class KoraResponse {
         }
     }
 
+    public static class Policy {
+        private long id;
+        private String name;
+        private String type;
+
+        public long getId() {
+            return this.id;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public String getType() {
+            return this.type;
+        }
+    }
+
     public static class License {
         private String key;
         private String status;
         private String expires_at;
         private Product product;
+        private Policy policy;
         private Customer customer;
         private List<Addon> addons;
 
@@ -95,6 +114,10 @@ public class KoraResponse {
 
         public Product getProduct() {
             return this.product;
+        }
+
+        public Policy getPolicy() {
+            return this.policy;
         }
 
         public Customer getCustomer() {
